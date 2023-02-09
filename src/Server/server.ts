@@ -31,7 +31,7 @@ const appRouter = router({
           return false;
         }
       } else {
-        return undefined;
+        return false;
       }
     }),
   userByUsername: publicProcedure
