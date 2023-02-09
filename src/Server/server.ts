@@ -14,7 +14,7 @@ const users = [
   },
 ];
 
-//login mutation
+//login mutations
 const appRouter = router({
   login: publicProcedure
     .input(z.object({ username: z.string(), password: z.string() }))
