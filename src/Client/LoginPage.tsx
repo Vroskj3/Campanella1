@@ -1,29 +1,20 @@
-import { log } from "console";
 import React, { useEffect, useState } from "react";
-import { z } from "zod";
 import { trpc } from "./utils/trpc";
 
 export default function LoginPage() {
-    const [loginEnable, setLoginEnable] = useState(false);
+    //const [loginEnable, setLoginEnable] = useState(false);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const login = trpc.login.useQuery({
-        username: username, password: password
-    }, { enabled: loginEnable })
-    useEffect(() => {
-        if (login.isFetched) {
-            if (login.data) {
-                console.log("giusto");
-            }
-            else {
-                console.log("errato");
-                setLoginEnable(false);
-            }
-        }
-    }, [login.isFetched, loginEnable])
-    function logIn() {
-        setLoginEnable(true);
+    const login = trpc.login.useMutation();
+    async function logIn() {
+        const isLogged = await login.mutateAsync({ username: username, password: password })
+        if (isLogged) {
+            console.log("giusto");
 
+        }
+        else {
+            console.log("errato");
+        }
     }
     return <div className="flex w-full h-screen flex-col items-center">
         <div className="flex flex-grow items-center">

@@ -7,11 +7,12 @@ const t = initTRPC.create();
 const router = t.router;
 const publicProcedure = t.procedure;
 
-const users = [
+let users = [
   {
     id: 1,
     username: "Alfio",
     password: "Alfio1",
+    lastLogin: "",
   },
 ];
 
@@ -22,7 +23,22 @@ const appRouter = router({
   }),
   login: publicProcedure
     .input(z.object({ username: z.string(), password: z.string() }))
-    .query((input) => {
+    .output(z.boolean())
+    .mutation((input) => {
+      let success = false;
+      users.forEach((i) => {
+        if (i.username === input.input.username) {
+          if (i.password == input.input.password) {
+            i.lastLogin = new Date().toISOString();
+            console.log(users);
+            success = true;
+            return;
+          }
+        }
+      });
+      return success;
+    }),
+  /* .query((input) => {
       let user = users.find((i) => i.username === input.input.username);
       if (user != null) {
         if (user.password == input.input.password) {
@@ -33,7 +49,7 @@ const appRouter = router({
       } else {
         return false;
       }
-    }),
+    }), */
   userByUsername: publicProcedure
     .input(z.object({ username: z.string() }))
     .query((input) => {
