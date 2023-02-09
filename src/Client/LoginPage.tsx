@@ -4,12 +4,14 @@ import { trpc } from "./utils/trpc";
 
 export default function LoginPage() {
     const [loginEnable, useLoginEnable] = useState(false);
-    const login = trpc.login.useQuery({ username: "Alfio", password: "Alfio1" }).data;/* {
+    let isjoaj = trpc.test.useQuery().data
+    console.log(isjoaj);
+    /*const login = trpc.login.useQuery({ username: "Alfio", password: "Alfio1" }).data; {
         username: (document.getElementById("userInput") as HTMLInputElement).value ?? "",
         password: (document.getElementById("passwordInput") as HTMLInputElement).value ?? ""
     }, { enabled: false }) */
     function ok() {
-        console.log(login);
+        console.log(isjoaj);
     }
     /* useEffect(() => {
         if (login === undefined) {

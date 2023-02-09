@@ -1,6 +1,7 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
-import { createHTTPServer } from "@trpc/server/adapters/standalone";
+import { createHTTPHandler } from "@trpc/server/adapters/standalone";
+import http from "http";
 
 const t = initTRPC.create();
 const router = t.router;
@@ -16,6 +17,9 @@ const users = [
 
 //login mutations
 const appRouter = router({
+  test: publicProcedure.query(() => {
+    return users[0];
+  }),
   login: publicProcedure
     .input(z.object({ username: z.string(), password: z.string() }))
     .query((input) => {
@@ -39,9 +43,24 @@ const appRouter = router({
 
 export type AppRouter = typeof appRouter;
 
-createHTTPServer({
+const handler = createHTTPHandler({
   router: appRouter,
   createContext() {
+    console.log("context 3");
     return {};
   },
-}).listen(2022);
+});
+
+const server = http.createServer((req: any, res: any) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Request-Method", "*");
+  res.setHeader("Access-Control-Allow-Methods", "OPTIONS, GET");
+  res.setHeader("Access-Control-Allow-Headers", "*");
+  if (req.method === "OPTIONS") {
+    res.writeHead(200);
+    return res.end();
+  }
+  handler(req, res);
+});
+
+server.listen(2022);
