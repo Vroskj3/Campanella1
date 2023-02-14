@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import { httpBatchLink } from '@trpc/client';
 import { trpc } from './utils/trpc';
+import HomePage from "./homepage";
+import { Divide } from "@blueprintjs/icons/lib/esm/generated-icons/16px/paths";
 
 //use trpc for database, not sure if use also sqlite3 in case of not using it remove it's module
 
@@ -19,10 +21,13 @@ function App() {
     }),
   );
 
+  const [isLogged, setLogged] = useState(false);
+
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <LoginPage />
+        {isLogged ? <div></div> : <LoginPage setLogged={setLogged} />}
+        {isLogged ? <HomePage /> : <div></div>}
       </QueryClientProvider>
     </trpc.Provider>
   );

@@ -16,11 +16,19 @@ let users = [
   },
 ];
 
-//login mutations
 const appRouter = router({
-  test: publicProcedure.query(() => {
-    return users[0];
-  }),
+  test: publicProcedure
+    .output(
+      z.object({
+        id: z.number(),
+        username: z.string(),
+        password: z.string(),
+        lastLogin: z.string(),
+      })
+    )
+    .query(() => {
+      return users[0];
+    }),
   login: publicProcedure
     .input(z.object({ username: z.string(), password: z.string() }))
     .output(z.boolean())
@@ -38,20 +46,18 @@ const appRouter = router({
       });
       return success;
     }),
-  /* .query((input) => {
-      let user = users.find((i) => i.username === input.input.username);
-      if (user != null) {
-        if (user.password == input.input.password) {
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    }), */
   userByUsername: publicProcedure
     .input(z.object({ username: z.string() }))
+    .output(
+      z
+        .object({
+          id: z.number(),
+          username: z.string(),
+          password: z.string(),
+          lastLogin: z.string(),
+        })
+        .optional()
+    )
     .query((input) => {
       return users.find((i) => i.username === input.input.username);
     }),
