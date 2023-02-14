@@ -9,7 +9,7 @@ export default function HomePage() {
             <div className="flex border">
                 <Icon icon="notifications" size={200} className={classNames(isBellRinging ? "animate-wave" : "animate-none", "fill-purple-800")} onClick={() => setBellRinging((prev) => !prev)} />
             </div>
-            <div>{isBellRinging ? "La campana sta suonando" : "La campana suona fra " + new Date().toTimeString()}</div>
+            <div>{isBellRinging ? "La campana sta suonando" : "La campana suona fra " + new Date().getHours().toString() + ":" + (new Date().getMinutes() + 5).toString()}</div>
         </div>
     </div>
 }

@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { httpBatchLink } from '@trpc/client';
 import { trpc } from './utils/trpc';
 import HomePage from "./homepage";
-import { Divide } from "@blueprintjs/icons/lib/esm/generated-icons/16px/paths";
 
 //use trpc for database, not sure if use also sqlite3 in case of not using it remove it's module
 

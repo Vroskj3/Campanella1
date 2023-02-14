@@ -46,6 +46,7 @@ const appRouter = router({
       });
       return success;
     }),
+
   userByUsername: publicProcedure
     .input(z.object({ username: z.string() }))
     .output(
