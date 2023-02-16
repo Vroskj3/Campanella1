@@ -2,65 +2,64 @@ import { initTRPC } from "@trpc/server";
 import { z } from "zod";
 import { createHTTPHandler } from "@trpc/server/adapters/standalone";
 import http from "http";
+import Database from "better-sqlite3";
+import bcrypt from "bcrypt";
 
 const t = initTRPC.create();
 const router = t.router;
 const publicProcedure = t.procedure;
-
-let users = [
-  {
-    id: 1,
-    username: "Alfio",
-    password: "Alfio1",
-    lastLogin: "",
-  },
-];
+const db = new Database("bellDatabase.db", {
+  verbose: console.log,
+});
+const saltRounds = 10;
 
 const appRouter = router({
   test: publicProcedure
     .output(
-      z.object({
-        id: z.number(),
-        username: z.string(),
-        password: z.string(),
-        lastLogin: z.string(),
-      })
-    )
-    .query(() => {
-      return users[0];
-    }),
-  login: publicProcedure
-    .input(z.object({ username: z.string(), password: z.string() }))
-    .output(z.boolean())
-    .mutation((input) => {
-      let success = false;
-      users.forEach((i) => {
-        if (i.username === input.input.username) {
-          if (i.password == input.input.password) {
-            i.lastLogin = new Date().toISOString();
-            console.log(users);
-            success = true;
-            return;
-          }
-        }
-      });
-      return success;
-    }),
-
-  userByUsername: publicProcedure
-    .input(z.object({ username: z.string() }))
-    .output(
-      z
-        .object({
+      z.array(
+        z.object({
           id: z.number(),
           username: z.string(),
           password: z.string(),
           lastLogin: z.string(),
         })
-        .optional()
+      )
     )
-    .query((input) => {
-      return users.find((i) => i.username === input.input.username);
+    .query(() => {
+      return db.prepare("SELECT * FROM users;").all();
+    }),
+  login: publicProcedure
+    .input(z.object({ username: z.string(), password: z.string() }))
+    .output(z.boolean())
+    .mutation(async ({ input }) => {
+      let success = false;
+      let dbPassword = db
+        .prepare("SELECT password FROM users WHERE username = ?;")
+        .get(input.username);
+      success = await bcrypt.compare(input.password, dbPassword.password);
+      return success;
+    }),
+  addUser: publicProcedure
+    .input(
+      z.object({
+        username: z.string(),
+        password: z.string(),
+        lastLogin: z.string(),
+      })
+    )
+    .mutation(({ input }) => {
+      bcrypt.hash(input.password, saltRounds, function (err, hash) {
+        db.prepare(
+          "INSERT INTO users (id, username, password, lastLogin) VALUES (?, ?, ?, ?);"
+        ).run(
+          db.prepare("SELECT MAX(id) AS latestUser FROM users;").get()
+            .latestUser + 1,
+          input.username,
+          hash,
+          input.lastLogin
+        );
+      });
+      return true;
     }),
 });
 
@@ -69,7 +68,6 @@ export type AppRouter = typeof appRouter;
 const handler = createHTTPHandler({
   router: appRouter,
   createContext() {
-    console.log("context 3");
     return {};
   },
 });
