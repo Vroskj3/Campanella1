@@ -28,6 +28,9 @@ const appRouter = router({
     .query(() => {
       return db.prepare("SELECT * FROM users;").all();
     }),
+  emptyDatabase: publicProcedure.mutation(() =>
+    db.prepare("DELETE FROM users;").run()
+  ),
   login: publicProcedure
     .input(z.object({ username: z.string(), password: z.string() }))
     .output(z.boolean())
@@ -36,7 +39,10 @@ const appRouter = router({
       let dbPassword = db
         .prepare("SELECT password FROM users WHERE username = ?;")
         .get(input.username);
-      success = await bcrypt.compare(input.password, dbPassword.password);
+      success = await bcrypt.compare(
+        input.password === "" ? "1" : input.password,
+        dbPassword ? dbPassword.password : "0"
+      );
       return success;
     }),
   addUser: publicProcedure
@@ -60,6 +66,21 @@ const appRouter = router({
         );
       });
       return true;
+    }),
+  isAlreadySigned: publicProcedure
+    .input(z.object({ username: z.string() }))
+    .output(z.boolean())
+    .mutation(({ input }) => {
+      const count = db
+        .prepare(
+          "SELECT COUNT(username) as count FROM users WHERE username = ?;"
+        )
+        .get(input.username).count;
+      if (count === 0) {
+        return false;
+      } else {
+        return true;
+      }
     }),
 });
 
