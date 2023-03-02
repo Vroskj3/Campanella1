@@ -29,6 +29,9 @@ module.exports = {
         wave: "wave 1.5s linear infinite",
         error: "error 0.75s",
       },
+      backgroundImage: {
+        "foto-marconi": "url('src/assets/foto_marconi.jpg')",
+      },
     },
   },
   plugins: [],

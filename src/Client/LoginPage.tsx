@@ -49,6 +49,7 @@ export default function LoginPage(p: { setLogged: (isLogged: boolean) => void })
                 }
                 else {
                     setFailedLogin(true)
+                    setIsSigned(true)
                 }
             }
         }
@@ -57,16 +58,16 @@ export default function LoginPage(p: { setLogged: (isLogged: boolean) => void })
             setIsCodeWrong(true)
         }
     }
-    return <div className="flex w-full h-screen flex-col items-center">
+    return <div className="flex w-full h-screen flex-col items-center bg-center bg-cover bg-no-repeat bg-foto-marconi">
         <div className="flex flex-grow items-center">
-            <div className={classNames("flex border-2 border-black rounded-lg p-3 flex-col w-full space-y-2 gap", failedLogin ? "animate-error" : "")}>
+            <div className={classNames("flex border-2 border-black rounded-lg p-3 flex-col w-full space-y-2 gap bg-white bg-opacity-80", failedLogin ? "animate-error" : "")}>
                 <div className="flex flex-col">
                     <div>Username</div>
                     <input type="text" className="border border-black rounded py-1 px-2 focus:outline-none" id="userInput" value={username} onChange={e => { setUsername(e.target.value) }} />
                 </div>
                 <div>
                     <div>Password</div>
-                    <div className="border border-black rounded py-1 px-2 flex flex-grow items-center">
+                    <div className="border border-black rounded py-1 px-2 flex flex-grow items-center bg-white">
                         <input type={isShowed ? "text" : "password"} className="flex-grow focus:outline-none" id="passwordInput" value={password} onChange={e => { setPassword(e.target.value) }} />
                         <Icon icon={isShowed ? "eye-open" : "eye-off"} onClick={() => setShow(!isShowed)}></Icon>
                     </div>

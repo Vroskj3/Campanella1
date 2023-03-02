@@ -28,9 +28,14 @@ const appRouter = router({
     .query(() => {
       return db.prepare("SELECT * FROM users;").all();
     }),
-  emptyDatabase: publicProcedure.mutation(() =>
-    db.prepare("DELETE FROM users;").run()
-  ),
+  emptyDatabase: publicProcedure
+    .input(z.enum(["users", "ringSchedule"]))
+    .mutation(({ input }) => {
+      console.log(input);
+      if (input === "users") db.prepare("DELETE FROM users;").run();
+      else if (input === "ringSchedule")
+        db.prepare("DELETE FROM ringSchedule;").run();
+    }),
   login: publicProcedure
     .input(z.object({ username: z.string(), password: z.string() }))
     .output(z.boolean())
@@ -70,7 +75,7 @@ const appRouter = router({
   isAlreadySigned: publicProcedure
     .input(z.object({ username: z.string() }))
     .output(z.boolean())
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       const count = db
         .prepare(
           "SELECT COUNT(username) as count FROM users WHERE username = ?;"
@@ -81,6 +86,44 @@ const appRouter = router({
       } else {
         return true;
       }
+    }),
+  ringSchedule: publicProcedure
+    .output(
+      z.array(
+        z.object({
+          id: z.number(),
+          fromDate: z.string(),
+          toDate: z.string(),
+          weekDay: z.string(),
+          ringTime: z.string(),
+        })
+      )
+    )
+    .query(() => {
+      return db.prepare("SELECT * FROM ringSchedule").all();
+    }),
+  addBellRule: publicProcedure
+    .input(
+      z.object({
+        fromDate: z.string(),
+        toDate: z.string(),
+        weekDay: z.string(),
+        ringTime: z.string(),
+      })
+    )
+    .output(z.boolean())
+    .mutation(({ input }) => {
+      db.prepare(
+        "INSERT INTO ringSchedule (id, fromDate, toDate, weekDay, ringTime) VALUES (?, ?, ?, ?, ?);"
+      ).run(
+        db.prepare("SELECT MAX(id) AS latestRule FROM ringSchedule;").get()
+          .latestRule + 1,
+        input.fromDate,
+        input.toDate,
+        input.weekDay,
+        input.ringTime
+      );
+      return true;
     }),
 });
 
