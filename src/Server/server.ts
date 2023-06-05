@@ -26,7 +26,7 @@ const appRouter = router({
       )
     )
     .query(() => {
-      return db.prepare("SELECT * FROM users;").all();
+      return db.prepare("SELECT * FROM users;").all() as any;
     }),
   emptyDatabase: publicProcedure
     .input(z.enum(["users", "ringSchedule"]))
@@ -43,7 +43,7 @@ const appRouter = router({
       let success = false;
       let dbPassword = db
         .prepare("SELECT password FROM users WHERE username = ?;")
-        .get(input.username);
+        .get(input.username) as any;
       success = await bcrypt.compare(
         input.password === "" ? "1" : input.password,
         dbPassword ? dbPassword.password : "0"
@@ -63,7 +63,7 @@ const appRouter = router({
         db.prepare(
           "INSERT INTO users (id, username, password, lastLogin) VALUES (?, ?, ?, ?);"
         ).run(
-          db.prepare("SELECT MAX(id) AS latestUser FROM users;").get()
+          (db.prepare("SELECT MAX(id) AS latestUser FROM users;").get()! as any)
             .latestUser + 1,
           input.username,
           hash,
@@ -76,11 +76,13 @@ const appRouter = router({
     .input(z.object({ username: z.string() }))
     .output(z.boolean())
     .mutation(async ({ input }) => {
-      const count = db
-        .prepare(
-          "SELECT COUNT(username) as count FROM users WHERE username = ?;"
-        )
-        .get(input.username).count;
+      const count = (
+        db
+          .prepare(
+            "SELECT COUNT(username) as count FROM users WHERE username = ?;"
+          )
+          .get(input.username)! as any
+      ).count;
       if (count === 0) {
         return false;
       } else {
@@ -100,7 +102,7 @@ const appRouter = router({
       )
     )
     .query(() => {
-      return db.prepare("SELECT * FROM ringSchedule").all();
+      return db.prepare("SELECT * FROM ringSchedule").all() as any;
     }),
   addBellRule: publicProcedure
     .input(
@@ -116,8 +118,11 @@ const appRouter = router({
       db.prepare(
         "INSERT INTO ringSchedule (id, fromDate, toDate, weekDay, ringTime) VALUES (?, ?, ?, ?, ?);"
       ).run(
-        db.prepare("SELECT MAX(id) AS latestRule FROM ringSchedule;").get()
-          .latestRule + 1,
+        (
+          db
+            .prepare("SELECT MAX(id) AS latestRule FROM ringSchedule;")
+            .get()! as any
+        ).latestRule + 1,
         input.fromDate,
         input.toDate,
         input.weekDay,

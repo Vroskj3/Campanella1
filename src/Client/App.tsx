@@ -1,9 +1,9 @@
-import React from "react"
-import LoginPage from "./LoginPage"
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
-import { httpBatchLink } from '@trpc/client';
-import { trpc } from './utils/trpc';
+import React, { useMemo } from "react";
+import LoginPage from "./LoginPage";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
+import { httpBatchLink } from "@trpc/client";
+import { trpc } from "./utils/trpc";
 import HomePage from "./homepage";
 
 //maybe change security code with something else.
@@ -16,10 +16,10 @@ function App() {
     trpc.createClient({
       links: [
         httpBatchLink({
-          url: 'http://localhost:2022',
+          url: "http://localhost:2022",
         }),
       ],
-    }),
+    })
   );
 
   const [isLogged, setLogged] = useState(false);
@@ -34,5 +34,4 @@ function App() {
   );
 }
 
-export default App
-
+export default App;
