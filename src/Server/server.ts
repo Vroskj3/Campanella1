@@ -130,6 +130,12 @@ const appRouter = router({
       );
       return true;
     }),
+  removeBellRuleById: publicProcedure
+    .input(z.number())
+    .mutation(({ input }) => {
+      db.prepare("DELETE FROM ringSchedule WHERE id = ?").run(input);
+      return true;
+    }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -1,33 +1,54 @@
 import React, { useState } from "react";
-import { Icon } from "@blueprintjs/core";
+import { Checkbox, Icon, Menu, MenuItem } from "@blueprintjs/core";
 import classNames from "classnames";
 import { trpc } from "./utils/trpc";
-import { date } from "zod";
 import RuleDialog from "./ruleDialog";
 
 export default function HomePage() {
   const [isBellRinging, setBellRinging] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
+  const [enableRemoveRule, setRemoveRule] = useState(true);
   const utils = trpc.useContext();
   const { isLoading, isError, data, error } = trpc.ringSchedule.useQuery();
   const ringSchedule = data;
-  console.log(ringSchedule);
-  const addRule = trpc.addBellRule.useMutation();
-  const okk = trpc.emptyDatabase.useMutation();
-  function ok() {
-    console.log("OK");
-    okk.mutate("ringSchedule", {
-      onSuccess() {
-        utils.invalidate();
-      },
-    });
+  const [ruleChecked, setRuleChecked] = useState([false]);
+  if (!isLoading && ruleChecked.length != data?.length) {
+    setRuleChecked(
+      data?.map(() => {
+        return false;
+      }) ?? [false]
+    );
   }
+  const removeRule = trpc.removeBellRuleById.useMutation();
+  const empty = trpc.emptyDatabase.useMutation();
   return (
     <div className="flex p-6 h-full gap-4">
-      <div className="flex flex-col">
-        <button className="flex w-min">
-          <Icon icon="menu" size={30} onClick={ok}></Icon>
-        </button>
+      <div className="flex flex-col space-y-4">
+        <Menu className="flex" large={false}>
+          <MenuItem
+            icon={<Icon icon="menu" size={30}></Icon>}
+            intent="none"
+            text="Settings"
+            children={
+              <>
+                <MenuItem icon="add" text="Add new application" />
+                <MenuItem
+                  icon="remove"
+                  intent="danger"
+                  text="Svuota il database"
+                  onClick={() =>
+                    empty.mutate("ringSchedule", {
+                      onSuccess() {
+                        utils.invalidate();
+                      },
+                    })
+                  }
+                />
+              </>
+            }
+          />
+        </Menu>
+
         <div className="flex flex-grow px-3 mb-3">
           <Icon
             icon="notifications"
@@ -62,31 +83,88 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-      <div className="border flex flex-col items-center">
+      <div className="border flex flex-col items-center p-3">
         <div className="text-xl font-bold">Programmazione Campanella</div>
         <div>
           {isLoading
             ? ""
-            : ringSchedule!.map((element) => {
+            : ringSchedule!.map((element, index) => {
                 return (
-                  <div className="flex flex-row border border-black divide-x divide-black">
-                    <div className="px-2">{element.id.toString()}</div>
-                    <div className="px-2">{element.fromDate}</div>
-                    <div className="px-2">{element.toDate}</div>
-                    <div className="px-2">{element.weekDay}</div>
-                    <div className="px-2">{element.ringTime}</div>
-                  </div>
+                  <Checkbox
+                    className="flex items-center"
+                    alignIndicator="right"
+                    disabled={enableRemoveRule}
+                    style={{ color: "black" }}
+                    checked={ruleChecked![index]}
+                    onChange={() => {
+                      setRuleChecked(
+                        ruleChecked?.map((x, index2) => {
+                          if (index === index2) {
+                            return !x;
+                          } else return x;
+                        })
+                      );
+                    }}
+                  >
+                    <div className="flex flex-row border border-black divide-x divide-black">
+                      <div className="px-2">{element.id.toString()}</div>
+                      <div className="px-2">{element.fromDate}</div>
+                      <div className="px-2">{element.toDate}</div>
+                      <div className="px-2">{element.weekDay}</div>
+                      <div className="px-2">{element.ringTime}</div>
+                    </div>
+                  </Checkbox>
                 );
               })}
         </div>
-        <button
-          className="flex border-2 border-black h-6 items-center focus:outline-none"
-          onClick={() => {
-            setDialogOpen(true);
-          }}
-        >
-          Aggiungi Regola
-        </button>
+        <div className="flex flex-row justify-evenly space-x-2">
+          <button
+            className="flex border-2 border-black h-6 items-center focus:outline-none px-1"
+            hidden={!enableRemoveRule}
+            onClick={() => {
+              setDialogOpen(true);
+            }}
+          >
+            Aggiungi Regola
+          </button>
+          <button
+            className="flex border-2 border-black h-6 items-center focus:outline-none px-1"
+            hidden={!enableRemoveRule}
+            onClick={() => {
+              setRemoveRule(false);
+            }}
+          >
+            Rimuovi Regola
+          </button>
+          <button
+            className="flex border-2 border-black h-6 items-center focus:outline-none px-1"
+            hidden={enableRemoveRule}
+            onClick={() => {
+              ruleChecked.forEach((val, index) => {
+                if (val) {
+                  removeRule.mutate(index + 1, {
+                    onSuccess() {
+                      utils.invalidate();
+                    },
+                  });
+                }
+              });
+              setRemoveRule(true);
+            }}
+          >
+            Salva
+          </button>
+          <button
+            className="flex border-2 border-black h-6 items-center focus:outline-none px-1"
+            hidden={enableRemoveRule}
+            onClick={() => {
+              setRuleChecked(ruleChecked.map(() => false));
+              setRemoveRule(true);
+            }}
+          >
+            Annulla
+          </button>
+        </div>
       </div>
       <RuleDialog isOpen={isDialogOpen} close={setDialogOpen} />
     </div>
