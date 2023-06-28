@@ -1,5 +1,5 @@
-import { initTRPC } from "@trpc/server";
-import { z } from "zod";
+import { ProcedureBuilder, initTRPC } from "@trpc/server";
+import { boolean, date, string, z } from "zod";
 import { createHTTPHandler } from "@trpc/server/adapters/standalone";
 import http from "http";
 import Database from "better-sqlite3";
@@ -14,7 +14,7 @@ const db = new Database("bellDatabase.db", {
 const saltRounds = 10;
 
 const appRouter = router({
-  test: publicProcedure
+  users: publicProcedure
     .output(
       z.array(
         z.object({
@@ -26,12 +26,13 @@ const appRouter = router({
       )
     )
     .query(() => {
+      caller.deleteLoginCode();
       return db.prepare("SELECT * FROM users;").all() as any;
     }),
   emptyDatabase: publicProcedure
     .input(z.enum(["users", "ringSchedule"]))
     .mutation(({ input }) => {
-      console.log(input);
+      caller.deleteLoginCode();
       if (input === "users") db.prepare("DELETE FROM users;").run();
       else if (input === "ringSchedule")
         db.prepare("DELETE FROM ringSchedule;").run();
@@ -40,6 +41,7 @@ const appRouter = router({
     .input(z.object({ username: z.string(), password: z.string() }))
     .output(z.boolean())
     .mutation(async ({ input }) => {
+      caller.deleteLoginCode();
       let success = false;
       let dbPassword = db
         .prepare("SELECT password FROM users WHERE username = ?;")
@@ -59,6 +61,7 @@ const appRouter = router({
       })
     )
     .mutation(({ input }) => {
+      caller.deleteLoginCode(true);
       bcrypt.hash(input.password, saltRounds, function (err, hash) {
         db.prepare(
           "INSERT INTO users (id, username, password, lastLogin) VALUES (?, ?, ?, ?);"
@@ -76,6 +79,7 @@ const appRouter = router({
     .input(z.object({ username: z.string() }))
     .output(z.boolean())
     .mutation(async ({ input }) => {
+      caller.deleteLoginCode();
       const count = (
         db
           .prepare(
@@ -102,7 +106,8 @@ const appRouter = router({
       )
     )
     .query(() => {
-      return db.prepare("SELECT * FROM ringSchedule").all() as any;
+      caller.deleteLoginCode();
+      return db.prepare("SELECT * FROM ringSchedule;").all() as any;
     }),
   addBellRule: publicProcedure
     .input(
@@ -115,6 +120,7 @@ const appRouter = router({
     )
     .output(z.boolean())
     .mutation(({ input }) => {
+      caller.deleteLoginCode();
       db.prepare(
         "INSERT INTO ringSchedule (id, fromDate, toDate, weekDay, ringTime) VALUES (?, ?, ?, ?, ?);"
       ).run(
@@ -133,10 +139,65 @@ const appRouter = router({
   removeBellRuleById: publicProcedure
     .input(z.number())
     .mutation(({ input }) => {
-      db.prepare("DELETE FROM ringSchedule WHERE id = ?").run(input);
+      caller.deleteLoginCode();
+      db.prepare("DELETE FROM ringSchedule WHERE id = ?;").run(input);
       return true;
     }),
+  writeLoginCode: publicProcedure.mutation(() => {
+    caller.deleteLoginCode();
+    const loginCode = db.prepare("SELECT * FROM loginCode;").get()! as any;
+    if (loginCode != undefined) {
+      return false;
+    }
+    const date = new Date().toISOString();
+    db.prepare("INSERT INTO loginCode (code, creationDate) VALUES (?,?);").run(
+      Math.floor(100000 + Math.random() * 900000),
+      date
+    );
+    return true;
+  }),
+  deleteLoginCode: publicProcedure
+    .input(z.boolean().default(false))
+    .output(z.boolean())
+    .mutation(({ input }) => {
+      const loginCode = db.prepare("SELECT * FROM loginCode;").get()! as any;
+      if (loginCode == undefined) {
+        return false;
+      }
+      var data = new Date(
+        (db.prepare("SELECT * FROM loginCode;").get()! as any).creationDate
+      );
+      data.setMinutes(data.getMinutes() + 2);
+      if (new Date() > data || input) {
+        db.prepare("DELETE FROM loginCode;").run();
+        return true;
+      } else {
+        return false;
+      }
+    }),
+  compareCode: publicProcedure
+    .input(z.string())
+    .output(z.boolean())
+    .mutation(({ input }) => {
+      const loginCode = db.prepare("SELECT * FROM loginCode;").get()! as any;
+      if (loginCode == undefined) {
+        return false;
+      }
+      const code = (db.prepare("SELECT * FROM loginCode;").get()! as any)
+        .code as number;
+      if (input === code.toString()) {
+        return true;
+      } else {
+        return false;
+      }
+    }),
+  removeUser: publicProcedure.input(z.number()).mutation(({ input }) => {
+    caller.deleteLoginCode();
+    db.prepare("DELETE FROM users WHERE id = ?;").run(input);
+    return true;
+  }),
 });
+const caller = appRouter.createCaller({});
 
 export type AppRouter = typeof appRouter;
 

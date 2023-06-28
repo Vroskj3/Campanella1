@@ -3,11 +3,13 @@ import { Checkbox, Icon, Menu, MenuItem } from "@blueprintjs/core";
 import classNames from "classnames";
 import { trpc } from "./utils/trpc";
 import RuleDialog from "./ruleDialog";
+import MenageUsersDialog from "./menageUsersDialog";
 
 export default function HomePage() {
   const [isBellRinging, setBellRinging] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [enableRemoveRule, setRemoveRule] = useState(true);
+  const [isUsersDialogOpen, setUsersDialogOpen] = useState(false);
   const utils = trpc.useContext();
   const { isLoading, isError, data, error } = trpc.ringSchedule.useQuery();
   const ringSchedule = data;
@@ -28,14 +30,20 @@ export default function HomePage() {
           <MenuItem
             icon={<Icon icon="menu" size={30}></Icon>}
             intent="none"
-            text="Settings"
+            text="Impostazioni"
             children={
               <>
-                <MenuItem icon="add" text="Add new application" />
+                <MenuItem
+                  icon="person"
+                  text="Gestisci utenti"
+                  onClick={() => {
+                    setUsersDialogOpen(true);
+                  }}
+                />
                 <MenuItem
                   icon="remove"
                   intent="danger"
-                  text="Svuota il database"
+                  text="Elimina tutte le regole"
                   onClick={() =>
                     empty.mutate("ringSchedule", {
                       onSuccess() {
@@ -53,10 +61,7 @@ export default function HomePage() {
           <Icon
             icon="notifications"
             size={150}
-            className={classNames(
-              isBellRinging ? "animate-wave" : "animate-none",
-              "fill-purple-800"
-            )}
+            className={isBellRinging ? "animate-wave" : "animate-none"}
             onClick={() => setBellRinging((prev) => !prev)}
           />
         </div>
@@ -142,7 +147,7 @@ export default function HomePage() {
             onClick={() => {
               ruleChecked.forEach((val, index) => {
                 if (val) {
-                  removeRule.mutate(index + 1, {
+                  removeRule.mutate(index + ringSchedule![0].id, {
                     onSuccess() {
                       utils.invalidate();
                     },
@@ -167,6 +172,10 @@ export default function HomePage() {
         </div>
       </div>
       <RuleDialog isOpen={isDialogOpen} close={setDialogOpen} />
+      <MenageUsersDialog
+        isOpen={isUsersDialogOpen}
+        close={setUsersDialogOpen}
+      />
     </div>
   );
 }
