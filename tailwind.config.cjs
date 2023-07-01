@@ -31,6 +31,7 @@ module.exports = {
       },
       backgroundImage: {
         "foto-marconi": "url('src/assets/foto_marconi.jpg')",
+        "sfondo-cortile": "url('src/assets/sfondo_cortile.jpg')",
       },
     },
   },

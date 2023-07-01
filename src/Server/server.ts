@@ -1,5 +1,5 @@
-import { ProcedureBuilder, initTRPC } from "@trpc/server";
-import { boolean, date, string, z } from "zod";
+import { initTRPC } from "@trpc/server";
+import { z } from "zod";
 import { createHTTPHandler } from "@trpc/server/adapters/standalone";
 import http from "http";
 import Database from "better-sqlite3";
@@ -194,6 +194,11 @@ const appRouter = router({
   removeUser: publicProcedure.input(z.number()).mutation(({ input }) => {
     caller.deleteLoginCode();
     db.prepare("DELETE FROM users WHERE id = ?;").run(input);
+    return true;
+  }),
+  ringNow: publicProcedure.input(z.number()).mutation(({ input }) => {
+    caller.deleteLoginCode();
+    db.prepare("INSERT INTO ringNow (ringType) VALUES (?);").run(input);
     return true;
   }),
 });

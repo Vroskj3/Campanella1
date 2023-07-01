@@ -83,9 +83,10 @@ export default function MenageUsersDialog(p: {
                     onClick={() => {
                       userChecked.forEach((val, index) => {
                         if (val) {
-                          removeUser.mutate(index + data![0].id, {
+                          removeUser.mutate(data![index].id, {
                             onSuccess() {
                               utils.invalidate();
+                              location.reload();
                             },
                           });
                         }
