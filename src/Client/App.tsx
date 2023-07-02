@@ -27,8 +27,7 @@ function App() {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <HomePage />
-        {/* {isLogged ? <HomePage /> : <LoginPage setLogged={setLogged} />} */}
+        {isLogged ? <HomePage /> : <LoginPage setLogged={setLogged} />}
       </QueryClientProvider>
     </trpc.Provider>
   );
