@@ -30,8 +30,10 @@ module.exports = {
         error: "error 0.75s",
       },
       backgroundImage: {
-        "foto-marconi": "url('src/assets/foto_marconi.jpg')",
-        "sfondo-cortile": "url('src/assets/sfondo_cortile.jpg')",
+        "foto-marconi":
+          "url('https://cdn.discordapp.com/attachments/841044044942409738/1125064079917203628/foto_marconi.jpg')",
+        "sfondo-cortile":
+          "url('https://cdn.discordapp.com/attachments/841044044942409738/1125064080152080384/sfondo_cortile.jpg')",
       },
     },
   },

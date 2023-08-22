@@ -1,0 +1,3 @@
+usbipd wsl attach --busid 2-1
+
+on powershell admin
